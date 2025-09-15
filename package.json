@@ -29,7 +29,7 @@
 	},
 	"homepage": "https://github.com/IQAICOM/adk-agent-starter#readme",
 	"dependencies": {
-		"@iqai/adk": "^0.3.3",
+		"@iqai/adk": "^0.3.5",
 		"@openrouter/ai-sdk-provider": "^1.2.0",
 		"dedent": "^1.7.0",
 		"dotenv": "^17.2.2",
