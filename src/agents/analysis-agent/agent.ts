@@ -1,7 +1,7 @@
 import { LlmAgent } from "@iqai/adk";
 import { openrouter } from "@openrouter/ai-sdk-provider";
 import dedent from "dedent";
-import { env } from "../../env";
+import { env } from "env";
 import { weatherTool } from "./tools";
 /**
  * Creates and configures a weather agent specialized in providing weather information.
