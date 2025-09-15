@@ -1,4 +1,5 @@
 import { LlmAgent } from "@iqai/adk";
+import { openrouter } from "@openrouter/ai-sdk-provider";
 import dedent from "dedent";
 import { env } from "env";
 import { marketSentimentTool } from "./tools";
@@ -14,7 +15,7 @@ export const getSentimentAgent = () => {
 		name: "sentiment_agent",
 		description: "Analyzes market sentiment for crypto assets",
 		instruction,
-		model: env.LLM_MODEL,
+		model: openrouter(env.LLM_MODEL),
 		tools: [marketSentimentTool],
 		outputKey: "sentiment_results",
 	});

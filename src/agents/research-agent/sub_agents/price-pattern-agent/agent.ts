@@ -1,4 +1,5 @@
 import { LlmAgent } from "@iqai/adk";
+import { openrouter } from "@openrouter/ai-sdk-provider";
 import dedent from "dedent";
 import { env } from "env";
 import {
@@ -19,7 +20,7 @@ export const getPricePatternAgent = () => {
 		description:
 			"Analyzes price trends, support/resistance, and chart patterns for crypto assets",
 		instruction,
-		model: env.LLM_MODEL,
+		model: openrouter(env.LLM_MODEL),
 		tools: [trendAnalysisTool, supportResistanceTool, chartPatternsTool],
 		outputKey: "price_pattern_results",
 	});

@@ -1,4 +1,5 @@
 import { LlmAgent } from "@iqai/adk";
+import { openrouter } from "@openrouter/ai-sdk-provider";
 import dedent from "dedent";
 import { env } from "env";
 import { internetSearchTool } from "./tools";
@@ -15,7 +16,7 @@ export const getInternetSearchAgent = () => {
 		description:
 			"Searches internet for latest news, tweets, Reddit posts about crypto tokens",
 		instruction,
-		model: env.LLM_MODEL,
+		model: openrouter(env.LLM_MODEL),
 		tools: [internetSearchTool],
 		outputKey: "internet_search_results",
 	});

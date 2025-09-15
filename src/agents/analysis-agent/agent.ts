@@ -1,8 +1,8 @@
 import { LlmAgent } from "@iqai/adk";
+import { openrouter } from "@openrouter/ai-sdk-provider";
 import dedent from "dedent";
 import { env } from "../../env";
 import { weatherTool } from "./tools";
-
 /**
  * Creates and configures a weather agent specialized in providing weather information.
  *
@@ -34,7 +34,7 @@ export const getAnalysisAgent = () => {
 		name: "analysis_agent",
 		description: "Provides analysis report given the research data",
 		instruction,
-		model: env.LLM_MODEL,
+		model: openrouter(env.LLM_MODEL),
 		tools: [weatherTool],
 	});
 

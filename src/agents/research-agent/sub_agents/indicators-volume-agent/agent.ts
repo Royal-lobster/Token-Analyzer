@@ -1,4 +1,5 @@
 import { LlmAgent } from "@iqai/adk";
+import { openrouter } from "@openrouter/ai-sdk-provider";
 import dedent from "dedent";
 import { env } from "env";
 import { indicatorsTool, volumeAnalysisTool } from "./tools";
@@ -14,7 +15,7 @@ export const getIndicatorsVolumeAgent = () => {
 		name: "indicators_volume_agent",
 		description: "Analyzes technical indicators and volume for crypto assets",
 		instruction,
-		model: env.LLM_MODEL,
+		model: openrouter(env.LLM_MODEL),
 		tools: [indicatorsTool, volumeAnalysisTool],
 		outputKey: "indicators_volume_results",
 	});
