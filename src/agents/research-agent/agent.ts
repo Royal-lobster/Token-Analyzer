@@ -5,13 +5,12 @@ import { getPricePatternAgent } from "./sub_agents/price-pattern-agent/agent";
 import { getSentimentAgent } from "./sub_agents/sentiment-agent/agent";
 
 /**
- * Creates and configures a joke agent specialized in providing humor.
+ * Creates and configures a research agent specialized in gathering cryptocurrency research data.
  *
- * This agent is equipped with tools to fetch and deliver jokes to users.
- * It uses the Gemini 2.5 Flash model for natural conversation flow and
- * can access joke-related tools for entertainment purposes.
+ * This agent is equipped with sub-agents to fetch and analyze various aspects of cryptocurrency markets,
+ * including price patterns, indicators, sentiment, and internet search trends.
  *
- * @returns A configured LlmAgent instance specialized for joke delivery
+ * @returns A configured ParallelAgent instance specialized for cryptocurrency research
  */
 export const getResearchAgent = () => {
 	return new ParallelAgent({

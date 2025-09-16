@@ -19,5 +19,7 @@ export const getInternetSearchAgent = () => {
 		model: openrouter(env.LLM_MODEL),
 		tools: [internetSearchTool],
 		outputKey: "internet_search_results",
+		disallowTransferToParent: true,
+		disallowTransferToPeers: true,
 	});
 };

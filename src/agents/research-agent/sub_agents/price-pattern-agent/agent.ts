@@ -23,5 +23,7 @@ export const getPricePatternAgent = () => {
 		model: openrouter(env.LLM_MODEL),
 		tools: [trendAnalysisTool, supportResistanceTool, chartPatternsTool],
 		outputKey: "price_pattern_results",
+		disallowTransferToParent: true,
+		disallowTransferToPeers: true,
 	});
 };

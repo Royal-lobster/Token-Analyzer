@@ -35,6 +35,8 @@ export const getAnalysisAgent = () => {
 		description: "Provides analysis report given the research data",
 		instruction,
 		model: openrouter(env.LLM_MODEL),
+		disallowTransferToParent: true,
+		disallowTransferToPeers: true,
 		tools: [weatherTool],
 	});
 

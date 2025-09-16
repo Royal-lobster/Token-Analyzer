@@ -14,16 +14,16 @@ dotenv.config();
 async function main() {
 	const { runner } = await getRootAgent();
 
-	const question =
-		"Provide a full technical, sentiment, and internet analysis for Bitcoin.";
+	const question = "Provide analysis for Bitcoin.";
 
 	console.log(`📝 Question: ${question}`);
 	const response = await runner.ask(question);
-	console.log(`🤖 Response: ${response}`);
 
 	const analysis_response = response.filter(
 		(r) => r.agent === "analysis_agent",
 	)[0].response;
+
+	console.log(`🤖 Response: ${analysis_response}`);
 
 	fs.writeFileSync("./response.md", analysis_response, { encoding: "utf-8" });
 }
