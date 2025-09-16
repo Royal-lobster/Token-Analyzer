@@ -107,7 +107,7 @@ Copy `.env.example` to `.env` and set the following variables:
 - `ADK_DEBUG` (optional): Enable ADK framework logs
 - `OPENROUTER_API_KEY`: API key for LLM access (required)
 - `LLM_MODEL`: LLM model name (default: `google/gemini-2.5-flash`)
-- `GOOGLE_API_KEY`, `WEB_SEARCH_API_KEY`: For internet search and Gemini models (if used)
+- `GOOGLE_API_KEY`, `TAVILY_API_KEY`: For internet search and Gemini models (if used)
 
 ---
 

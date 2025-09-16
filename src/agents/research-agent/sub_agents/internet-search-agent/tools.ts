@@ -15,27 +15,67 @@ export const internetSearchTool = createTool({
 	}),
 	fn: async ({ queries }) => {
 		try {
-			const apiKey = process.env.WEB_SEARCH_API_KEY;
+			const apiKey = process.env.TAVILY_API_KEY;
+			if (!apiKey) {
+				return "Tavily API key not found. Please set TAVILY_API_KEY environment variable.";
+			}
+
 			const results: string[] = [];
 			for (const query of queries) {
-				const url = `https://api.websearch.com/v1/search?q=${encodeURIComponent(query)}&apikey=${apiKey}`;
-				const res = await fetch(url);
-				if (!res.ok) {
-					results.push(`Error for '${query}': Web Search API error`);
+				const response = await fetch("https://api.tavily.com/search", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						api_key: apiKey,
+						query: query,
+						search_depth: "basic",
+						include_answer: true,
+						include_raw_content: false,
+						max_results: 5,
+						include_domains: [],
+						exclude_domains: [],
+					}),
+				});
+
+				if (!response.ok) {
+					results.push(
+						`Error for '${query}': Tavily API error (${response.status})`,
+					);
 					continue;
 				}
-				const data = (await res.json()) as {
-					results?: Array<{ title: string; description: string }>;
+
+				const data = (await response.json()) as {
+					answer?: string;
+					results?: Array<{
+						title: string;
+						url: string;
+						content: string;
+						score: number;
+					}>;
 				};
+
 				if (data?.results?.length) {
-					results.push(
-						`Query: '${query}'\nTop result: ${data.results[0].title} - ${data.results[0].description}`,
-					);
+					let resultText = `Query: '${query}'\n`;
+
+					// Include the AI-generated answer if available
+					if (data.answer) {
+						resultText += `Answer: ${data.answer}\n\n`;
+					}
+
+					// Include top search results
+					resultText += "Top results:\n";
+					data.results.slice(0, 3).forEach((result, index) => {
+						resultText += `${index + 1}. ${result.title}\n   ${result.content.substring(0, 200)}...\n   URL: ${result.url}\n\n`;
+					});
+
+					results.push(resultText.trim());
 				} else {
 					results.push(`Query: '${query}'\nNo search results found.`);
 				}
 			}
-			return results.join("\n\n");
+			return results.join("\n\n---\n\n");
 		} catch (e) {
 			const msg =
 				typeof e === "object" && e && "message" in e
