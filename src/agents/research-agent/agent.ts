@@ -14,15 +14,21 @@ import { getSentimentAgent } from "./sub_agents/sentiment-agent/agent";
  * @returns A configured ParallelAgent instance specialized for cryptocurrency research
  */
 export const getResearchAgent = () => {
+	const pricePatternAgent = getPricePatternAgent();
+	const indicatorsVolumeAgent = getIndicatorsVolumeAgent();
+	const sentimentAgent = getSentimentAgent();
+	const internetSearchAgent = getInternetSearchAgent();
+	const marketDataAgent = getMarketDataAgent();
+
 	return new ParallelAgent({
 		name: "research_agent",
 		description: "Gathers cryptocurrency research data with help of sub agents",
 		subAgents: [
-			getPricePatternAgent(),
-			getIndicatorsVolumeAgent(),
-			getSentimentAgent(),
-			getInternetSearchAgent(),
-			getMarketDataAgent(),
+			pricePatternAgent,
+			indicatorsVolumeAgent,
+			sentimentAgent,
+			internetSearchAgent,
+			marketDataAgent,
 		],
 	});
 };
