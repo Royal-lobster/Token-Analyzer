@@ -1,183 +1,134 @@
 import { createTool } from "@iqai/adk";
+import { coingeckoFetch } from "@utils";
 import * as z from "zod";
 
-// 1. Trend Analysis Tool
-export const trendAnalysisTool = createTool({
-	name: "trend_analysis",
+// Market Overview Tool
+export const marketOverviewTool = createTool({
+	name: "market_overview",
 	description:
-		"Identify current price trend for a crypto asset (bullish, bearish, sideways)",
+		"Get comprehensive market data for a crypto asset including price, market cap, volume, etc.",
 	schema: z.object({
 		coinId: z.string().describe("Coingecko coin id, e.g. 'bitcoin'"),
-		days: z.number().default(30).describe("Number of days for trend analysis"),
 	}),
-	fn: async ({ coinId, days }) => {
+	fn: async ({ coinId }) => {
 		try {
-			const data = (await coingeckoFetch(
-				`coins/${coinId}/market_chart?vs_currency=usd&days=${days}`,
-			)) as { prices: [number, number][] };
-			const prices = data.prices.map((pair) => pair[1]);
-			const start = prices[0],
-				end = prices[prices.length - 1];
-			const pct = ((end - start) / start) * 100;
-			if (pct > 5) return `Bullish (+${pct.toFixed(2)}%)`;
-			if (pct < -5) return `Bearish (${pct.toFixed(2)}%)`;
-			return `Sideways (${pct.toFixed(2)}%)`;
+			const data = (await coingeckoFetch(`coins/${coinId}`)) as {
+				current_price: { usd: number };
+				market_cap: { usd: number };
+				total_volume: { usd: number };
+				price_change_percentage_24h: number;
+				price_change_percentage_7d: number;
+				price_change_percentage_30d: number;
+				market_cap_rank: number;
+				circulating_supply: number;
+				total_supply: number;
+				max_supply: number;
+			};
+
+			return {
+				price: `$${data.current_price.usd.toFixed(2)}`,
+				market_cap: `$${(data.market_cap.usd / 1e9).toFixed(2)}B`,
+				volume_24h: `$${(data.total_volume.usd / 1e6).toFixed(2)}M`,
+				price_change_24h: `${data.price_change_percentage_24h?.toFixed(2)}%`,
+				price_change_7d: `${data.price_change_percentage_7d?.toFixed(2)}%`,
+				price_change_30d: `${data.price_change_percentage_30d?.toFixed(2)}%`,
+				market_cap_rank: data.market_cap_rank,
+				circulating_supply: data.circulating_supply?.toFixed(0),
+				total_supply: data.total_supply?.toFixed(0),
+				max_supply: data.max_supply?.toFixed(0) || "N/A",
+			};
 		} catch {
-			return "Trend analysis unavailable.";
+			return "Market overview unavailable.";
 		}
 	},
 });
 
-// 2. Support/Resistance Tool (simple: recent high/low)
-export const supportResistanceTool = createTool({
-	name: "support_resistance",
-	description: "Get key support and resistance levels for a crypto asset",
-	schema: z.object({
-		coinId: z.string().describe("Coingecko coin id"),
-		days: z.number().default(30).describe("Number of days to analyze"),
-	}),
-	fn: async ({ coinId, days }) => {
-		try {
-			const data = (await coingeckoFetch(
-				`coins/${coinId}/market_chart?vs_currency=usd&days=${days}`,
-			)) as { prices: [number, number][] };
-			const prices = data.prices.map((pair) => pair[1]);
-			const support = Math.min(...prices);
-			const resistance = Math.max(...prices);
-			return `Support: $${support.toFixed(2)}, Resistance: $${resistance.toFixed(2)}`;
-		} catch {
-			return "Support/resistance unavailable.";
-		}
-	},
-});
-
-// 3. Chart Patterns Tool (simple: detect double top/bottom)
-export const chartPatternsTool = createTool({
-	name: "chart_patterns",
+// Price History Tool
+export const priceHistoryTool = createTool({
+	name: "price_history",
 	description:
-		"Detect simple chart patterns (double top/bottom) for a crypto asset",
+		"Get historical price data for a crypto asset over specified time period",
 	schema: z.object({
 		coinId: z.string().describe("Coingecko coin id"),
-		days: z.number().default(30).describe("Number of days to analyze"),
+		days: z
+			.number()
+			.default(7)
+			.describe("Number of days of price history (1, 7, 30, 90, 365)"),
 	}),
 	fn: async ({ coinId, days }) => {
 		try {
 			const data = (await coingeckoFetch(
 				`coins/${coinId}/market_chart?vs_currency=usd&days=${days}`,
 			)) as { prices: [number, number][] };
-			const prices = data.prices.map((pair) => pair[1]);
-			// Naive double top/bottom detection
-			const mid = Math.floor(prices.length / 2);
-			const firstPeak = Math.max(...prices.slice(0, mid));
-			const secondPeak = Math.max(...prices.slice(mid));
-			const firstTrough = Math.min(...prices.slice(0, mid));
-			const secondTrough = Math.min(...prices.slice(mid));
-			let pattern = "No clear pattern detected.";
-			if (Math.abs(firstPeak - secondPeak) / firstPeak < 0.03)
-				pattern = "Double Top pattern detected.";
-			if (Math.abs(firstTrough - secondTrough) / firstTrough < 0.03)
-				pattern = "Double Bottom pattern detected.";
-			return pattern;
+
+			const prices = data.prices;
+			const firstPrice = prices[0][1];
+			const lastPrice = prices[prices.length - 1][1];
+			const highPrice = Math.max(...prices.map((p) => p[1]));
+			const lowPrice = Math.min(...prices.map((p) => p[1]));
+			const priceChange = ((lastPrice - firstPrice) / firstPrice) * 100;
+
+			return {
+				period: `${days} days`,
+				starting_price: `$${firstPrice.toFixed(2)}`,
+				current_price: `$${lastPrice.toFixed(2)}`,
+				high: `$${highPrice.toFixed(2)}`,
+				low: `$${lowPrice.toFixed(2)}`,
+				price_change: `${priceChange.toFixed(2)}%`,
+				data_points: prices.length,
+			};
 		} catch {
-			return "Chart pattern analysis unavailable.";
+			return "Price history unavailable.";
 		}
 	},
 });
 
-// 4. Indicators Tool (RSI, simple MA)
-export const indicatorsTool = createTool({
-	name: "indicators",
-	description: "Get technical indicators (RSI, MA) for a crypto asset",
-	schema: z.object({
-		coinId: z.string().describe("Coingecko coin id"),
-		days: z.number().default(14).describe("Number of days for RSI/MA"),
-	}),
-	fn: async ({ coinId, days }) => {
-		try {
-			const data = (await coingeckoFetch(
-				`coins/${coinId}/market_chart?vs_currency=usd&days=${days}`,
-			)) as { prices: [number, number][] };
-			const prices = data.prices.map((pair) => pair[1]);
-			// Simple MA
-			const ma =
-				prices.reduce((a: number, b: number) => a + b, 0) / prices.length;
-			// RSI (naive)
-			let gains = 0,
-				losses = 0;
-			for (let i = 1; i < prices.length; i++) {
-				const diff = prices[i] - prices[i - 1];
-				if (diff > 0) gains += diff;
-				else losses -= diff;
-			}
-			const avgGain = gains / days;
-			const avgLoss = losses / days;
-			const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
-			const rsi = 100 - 100 / (1 + rs);
-			return `MA: $${ma.toFixed(2)}, RSI: ${rsi.toFixed(2)}`;
-		} catch {
-			return "Indicator analysis unavailable.";
-		}
-	},
-});
-
-// 5. Volume Analysis Tool
-export const volumeAnalysisTool = createTool({
-	name: "volume_analysis",
-	description: "Analyze trading volume patterns for a crypto asset",
-	schema: z.object({
-		coinId: z.string().describe("Coingecko coin id"),
-		days: z.number().default(30).describe("Number of days to analyze"),
-	}),
-	fn: async ({ coinId, days }) => {
-		try {
-			const data = (await coingeckoFetch(
-				`coins/${coinId}/market_chart?vs_currency=usd&days=${days}`,
-			)) as { total_volumes: [number, number][] };
-			const volumes = data.total_volumes.map((pair) => pair[1]);
-			const avgVol =
-				volumes.reduce((a: number, b: number) => a + b, 0) / volumes.length;
-			const maxVol = Math.max(...volumes);
-			const minVol = Math.min(...volumes);
-			return `Avg Vol: ${avgVol.toFixed(0)}, Max Vol: ${maxVol.toFixed(0)}, Min Vol: ${minVol.toFixed(0)}`;
-		} catch {
-			return "Volume analysis unavailable.";
-		}
-	},
-});
-
-// 6. Market Sentiment Tool (uses Coingecko's sentiment data)
-export const marketSentimentTool = createTool({
-	name: "market_sentiment",
-	description:
-		"Get market sentiment for a crypto asset (Coingecko up/down votes)",
+// Market Metrics Tool
+export const marketMetricsTool = createTool({
+	name: "market_metrics",
+	description: "Get detailed market metrics and ratios for a crypto asset",
 	schema: z.object({
 		coinId: z.string().describe("Coingecko coin id"),
 	}),
 	fn: async ({ coinId }) => {
 		try {
 			const data = (await coingeckoFetch(`coins/${coinId}`)) as {
-				sentiment_votes_up_percentage: number;
-				sentiment_votes_down_percentage: number;
+				market_data: {
+					current_price: { usd: number };
+					market_cap: { usd: number };
+					total_volume: { usd: number };
+					fully_diluted_valuation: { usd: number };
+					circulating_supply: number;
+					total_supply: number;
+					max_supply: number;
+					ath: { usd: number };
+					ath_change_percentage: { usd: number };
+					atl: { usd: number };
+					atl_change_percentage: { usd: number };
+				};
 			};
-			const up = data.sentiment_votes_up_percentage;
-			const down = data.sentiment_votes_down_percentage;
-			return `Up votes: ${up}%, Down votes: ${down}%`;
+
+			const marketData = data.market_data;
+			const volumeToMcapRatio =
+				(marketData.total_volume.usd / marketData.market_cap.usd) * 100;
+
+			return {
+				current_price: `$${marketData.current_price.usd.toFixed(2)}`,
+				market_cap: `$${(marketData.market_cap.usd / 1e9).toFixed(2)}B`,
+				fdv: marketData.fully_diluted_valuation?.usd
+					? `$${(marketData.fully_diluted_valuation.usd / 1e9).toFixed(2)}B`
+					: "N/A",
+				volume_mcap_ratio: `${volumeToMcapRatio.toFixed(2)}%`,
+				ath: `$${marketData.ath.usd.toFixed(2)}`,
+				ath_change: `${marketData.ath_change_percentage.usd.toFixed(2)}%`,
+				atl: `$${marketData.atl.usd.toFixed(2)}`,
+				atl_change: `${marketData.atl_change_percentage.usd.toFixed(2)}%`,
+				supply_ratio: marketData.max_supply
+					? `${((marketData.circulating_supply / marketData.max_supply) * 100).toFixed(2)}%`
+					: "N/A",
+			};
 		} catch {
-			return "Market sentiment unavailable.";
+			return "Market metrics unavailable.";
 		}
 	},
 });
-
-// Helper: Fetch from Coingecko with simple in-memory cache
-const coingeckoCache = new Map<string, unknown>();
-async function coingeckoFetch(endpoint: string) {
-	const url = `https://api.coingecko.com/api/v3/${endpoint}`;
-	if (coingeckoCache.has(url)) {
-		return coingeckoCache.get(url);
-	}
-	const res = await fetch(url);
-	if (!res.ok) throw new Error("Coingecko API error");
-	const json = await res.json();
-	coingeckoCache.set(url, json);
-	return json;
-}

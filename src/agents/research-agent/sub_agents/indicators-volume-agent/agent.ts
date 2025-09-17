@@ -18,7 +18,6 @@ export const getIndicatorsVolumeAgent = () => {
 		model: openrouter(env.LLM_MODEL),
 		tools: [indicatorsTool, volumeAnalysisTool],
 		outputKey: "indicators_volume_results",
-		disallowTransferToParent: true,
 		disallowTransferToPeers: true,
 	});
 };

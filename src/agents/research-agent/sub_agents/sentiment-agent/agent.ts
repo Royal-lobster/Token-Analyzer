@@ -18,7 +18,6 @@ export const getSentimentAgent = () => {
 		model: openrouter(env.LLM_MODEL),
 		tools: [marketSentimentTool],
 		outputKey: "sentiment_results",
-		disallowTransferToParent: true,
 		disallowTransferToPeers: true,
 	});
 };

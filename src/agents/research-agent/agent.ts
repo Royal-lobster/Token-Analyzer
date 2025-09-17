@@ -1,6 +1,7 @@
 import { ParallelAgent } from "@iqai/adk";
 import { getIndicatorsVolumeAgent } from "./sub_agents/indicators-volume-agent/agent";
 import { getInternetSearchAgent } from "./sub_agents/internet-search-agent/agent";
+import { getMarketDataAgent } from "./sub_agents/market-data-agent/agent";
 import { getPricePatternAgent } from "./sub_agents/price-pattern-agent/agent";
 import { getSentimentAgent } from "./sub_agents/sentiment-agent/agent";
 
@@ -21,6 +22,7 @@ export const getResearchAgent = () => {
 			getIndicatorsVolumeAgent(),
 			getSentimentAgent(),
 			getInternetSearchAgent(),
+			getMarketDataAgent(),
 		],
 	});
 };
