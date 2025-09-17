@@ -14,6 +14,7 @@ export const envSchema = z.object({
 	ADK_DEBUG: z.coerce.boolean().default(false),
 	OPENROUTER_API_KEY: z.string(),
 	LLM_MODEL: z.string().default("google/gemini-2.5-flash"),
+	TAVILY_API_KEY: z.string().optional(),
 });
 
 /**
