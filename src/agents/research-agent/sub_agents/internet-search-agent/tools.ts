@@ -20,61 +20,63 @@ export const internetSearchTool = createTool({
 				return "Tavily API key not found. Please set TAVILY_API_KEY environment variable.";
 			}
 
-			const results: string[] = [];
-			for (const query of queries) {
-				const response = await fetch("https://api.tavily.com/search", {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({
-						api_key: apiKey,
-						query: query,
-						search_depth: "basic",
-						include_answer: true,
-						include_raw_content: false,
-						max_results: 5,
-						include_domains: [],
-						exclude_domains: [],
-					}),
-				});
-
-				if (!response.ok) {
-					results.push(
-						`Error for '${query}': Tavily API error (${response.status})`,
-					);
-					continue;
-				}
-
-				const data = (await response.json()) as {
-					answer?: string;
-					results?: Array<{
-						title: string;
-						url: string;
-						content: string;
-						score: number;
-					}>;
-				};
-
-				if (data?.results?.length) {
-					let resultText = `Query: '${query}'\n`;
-
-					// Include the AI-generated answer if available
-					if (data.answer) {
-						resultText += `Answer: ${data.answer}\n\n`;
-					}
-
-					// Include top search results
-					resultText += "Top results:\n";
-					data.results.slice(0, 3).forEach((result, index) => {
-						resultText += `${index + 1}. ${result.title}\n   ${result.content.substring(0, 200)}...\n   URL: ${result.url}\n\n`;
+			const searchPromises = queries.map(async (query) => {
+				try {
+					const response = await fetch("https://api.tavily.com/search", {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({
+							api_key: apiKey,
+							query: query,
+							search_depth: "basic",
+							include_answer: true,
+							include_raw_content: false,
+							max_results: 5,
+							include_domains: [],
+							exclude_domains: [],
+						}),
 					});
 
-					results.push(resultText.trim());
-				} else {
-					results.push(`Query: '${query}'\nNo search results found.`);
+					if (!response.ok) {
+						return `Error for '${query}': Tavily API error (${response.status})`;
+					}
+
+					const data = (await response.json()) as {
+						answer?: string;
+						results?: Array<{
+							title: string;
+							url: string;
+							content: string;
+							score: number;
+						}>;
+					};
+
+					if (data?.results?.length) {
+						let resultText = `Query: '${query}'\n`;
+
+						// Include the AI-generated answer if available
+						if (data.answer) {
+							resultText += `Answer: ${data.answer}\n\n`;
+						}
+
+						// Include top search results
+						resultText += "Top results:\n";
+						data.results.slice(0, 3).forEach((result, index) => {
+							resultText += `${index + 1}. ${result.title}\n   ${result.content.substring(0, 200)}...\n   URL: ${result.url}\n\n`;
+						});
+
+						return resultText.trim();
+					} else {
+						return `Query: '${query}'\nNo search results found.`;
+					}
+				} catch (error) {
+					return `Error for '${query}': ${error instanceof Error ? error.message : String(error)}`;
 				}
-			}
+			});
+
+			const results = await Promise.all(searchPromises);
 			return results.join("\n\n---\n\n");
 		} catch (e) {
 			const msg =
